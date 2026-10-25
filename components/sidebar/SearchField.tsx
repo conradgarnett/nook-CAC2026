@@ -8,6 +8,11 @@ import type { Bounds } from "@/lib/geo/tiles";
 import type { GroupId } from "@/types/business";
 import styles from "./Sidebar.module.css";
 
+/** "Pizza" -> "pizza", but cuisines from places keep their capital: "Mexican", "Thai" */
+function placeWord(label: string): string {
+  return /(an|ese|ish|ai|ek|ch|ic)$/i.test(label) && !/^(vegan|vegetarian)$/i.test(label) ? label : label.toLowerCase();
+}
+
 type Option = { kind: "tag"; match: TagMatch } | { kind: "place"; entry: SearchEntry };
 
 interface Props {
@@ -41,6 +46,12 @@ export default function SearchField({ view, onPickPlace, onPickTag }: Props) {
     if (entries || failed) return;
     loadSearchIndex().then(setEntries, () => setFailed(true));
   }
+
+  // Fetch the index shortly after the map is up, so the first search is instant
+  useEffect(() => {
+    const timer = setTimeout(() => loadSearchIndex().then(setEntries, () => setFailed(true)), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const results = useMemo(() => (entries ? search(entries, query, view, 8) : null), [entries, query, view]);
   const options: Option[] = useMemo(
@@ -121,7 +132,7 @@ export default function SearchField({ view, onPickPlace, onPickTag }: Props) {
             >
               {option.kind === "tag" ? (
                 <>
-                  <span className={styles.optionName}>Show every {option.match.label.toLowerCase()} place</span>
+                  <span className={styles.optionName}>Show every {placeWord(option.match.label)} place</span>
                   <span className={styles.optionMeta}>
                     {option.match.count.toLocaleString()} on screen in{" "}
                     {GROUPS.find((g) => g.id === option.match.group)?.label.toLowerCase()}

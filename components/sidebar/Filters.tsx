@@ -20,9 +20,9 @@ interface Props {
 export default function Filters({ group, counts, total, savedCount, tags, tag, onGroup, onTag }: Props) {
   const kinds = tags.filter((option) => !option.feature).slice(0, 10);
   const features = tags.filter((option) => option.feature).slice(0, 4);
-  const rows: { id: GroupFilter; label: string; count: number | null }[] = [
+  const rows: { id: GroupFilter; label: string; count: number | null; color?: string }[] = [
     { id: "all", label: "Everything", count: total },
-    ...GROUPS.map((g) => ({ id: g.id as GroupFilter, label: g.label, count: counts?.[g.id] ?? null })),
+    ...GROUPS.map((g) => ({ id: g.id as GroupFilter, label: g.label, count: counts?.[g.id] ?? null, color: g.color })),
     { id: "saved", label: "Saved", count: savedCount },
   ];
   return (
@@ -37,7 +37,10 @@ export default function Filters({ group, counts, total, savedCount, tags, tag, o
             className={styles.group}
             onClick={() => onGroup(row.id)}
           >
-            <span>{row.label}</span>
+            <span className={styles.groupLabel}>
+              {row.color && <span className={styles.swatch} style={{ background: row.color }} aria-hidden />}
+              {row.label}
+            </span>
             {row.count !== null && <span className={styles.count}>{row.count.toLocaleString()}</span>}
           </button>
         ))}

@@ -40,13 +40,18 @@ function townInView(places: BusinessCollection, [west, south, east, north]: Boun
   const width = (east - west) / 3;
   const height = (north - south) / 3;
   const middle: Bounds = [west + width, south + height, east - width, north - height];
-  const counts = new Map<string, number>();
-  for (const { properties, geometry } of places.features) {
-    if (properties.city && inBounds(geometry.coordinates, middle)) {
-      counts.set(properties.city, (counts.get(properties.city) ?? 0) + 1);
+  // Zoomed in close, the middle third may hold no place with a town: use the whole view
+  for (const area of [middle, [west, south, east, north] as Bounds]) {
+    const counts = new Map<string, number>();
+    for (const { properties, geometry } of places.features) {
+      if (properties.city && inBounds(geometry.coordinates, area)) {
+        counts.set(properties.city, (counts.get(properties.city) ?? 0) + 1);
+      }
     }
+    const best = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (best) return best;
   }
-  return [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  return null;
 }
 
 export default function LocalMap() {

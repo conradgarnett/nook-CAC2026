@@ -200,11 +200,16 @@ from the earlier designs.
   paint). The map switches to Organic Maps' own dark palette and dark icons
   (`public/map/style-dark.json`, `sprite-dark*`, from the same drules), and
   the interface to dark tokens in `app/globals.css`.
-- **Pins on discs:** Organic Maps draws its icons bare, which got lost on
-  their tan land (cafe icons especially). Each business icon is drawn onto a
-  white disc with a thin ring (dark disc in dark mode), made in the browser
-  from the sprite icon the first time it's needed
-  (`setMissingStyleImageResolver` in `OrganicMap.tsx`).
+- **Pins on discs, colored by group** (2026-10-25): each business pin is a
+  disc in its group's color (`GROUPS` in `lib/groups.ts`: food `#eda100`,
+  groceries `#008300`, personal care `#e87ba4`, services `#2a78d6`,
+  shopping `#b23f9a`, slightly lifted for the dark map) with the Organic
+  Maps type glyph on top (dark glyph on amber and pink, white on the rest).
+  Made in the browser the first time it's needed
+  (`setMissingStyleImageResolver` in `OrganicMap.tsx`): the glyph is cut
+  out of the sprite icon as the pixels that differ from the icon's own
+  circle color, so it works for both the light and dark icon sets. The
+  sidebar groups show the same colors as dots. Pins are smaller zoomed out.
 - **Words:** plain, sentence case, from the visitor's side. No ALL-CAPS
   labels, no "A · B · C" strings. Errors say what happened and what to do.
 
@@ -788,3 +793,21 @@ why "add a missing business" is a core feature, not an extra.
   NSI), so it was not changed. `npm audit`: 5 high, all in
   `eslint-config-next`'s dev-only glob library, not shipped; its suggested
   fix downgrades to Next 14, so ignored.
+- **2026-10-25 (demo polish, submission):** Conrad asked for a working demo
+  for the submission video and a polished GitHub. (1) Group-colored pins
+  (planned on 10-15) built, with matching dots in the sidebar; pins shrink
+  when zoomed out (`icon-size` 0.7 at zoom 9 to 1 at zoom 15). `THIN_CELLS`
+  left at 16 (no data re-export). (2) Search index now loads 1.5 s after the
+  page opens, so the first search shows results at once instead of
+  "Loading every business...". (3) Header town falls back to the whole view
+  when the middle third has no place with a town (zoomed in on a route it
+  said "Washington, DC area"). (4) Fixed a crash, "Cannot read properties of
+  undefined (reading 'setData')": React's dev double-mount let the first,
+  removed map mark the second one ready before its style loaded. (5) Next.js
+  dev badge hidden (`devIndicators: false`) so it isn't in recordings.
+  (6) "Show every Mexican place" keeps cuisine capitals. (7) README
+  rewritten for judges with screenshots (`docs/img/`). Map theme switching
+  (Light, Dark, Auto, rapid toggles) checked in headless Chrome: map and
+  sidebar change together. The reported "only the sidebar changes" came
+  from a dev server that had been running since 10-15; restarting it fixed
+  it. Lint, `tsc` and `npm run build` pass.

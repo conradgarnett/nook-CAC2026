@@ -14,7 +14,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import type { Theme } from "@/hooks/useTheme";
 import type { ViewState } from "@/hooks/useTiles";
 import type { SavedSpot } from "@/hooks/useSaved";
-import type { GroupFilter } from "@/lib/groups";
+import { GROUPS, type GroupFilter } from "@/lib/groups";
 import type { BusinessCollection, BusinessFeature } from "@/types/business";
 import type { LngLat, TravelMode } from "@/types/routing";
 
@@ -67,12 +67,22 @@ const THEMES = {
 const DISC_PADDING = 3;
 const DISC_RING = 1;
 
+/** "pin:food:bakery-m" -> group "food", sprite icon "bakery-m" */
+function parsePin(id: string): { group: string; icon: string } {
+  const rest = id.slice("pin:".length);
+  const colon = rest.indexOf(":");
+  return colon < 0 ? { group: "", icon: rest } : { group: rest.slice(0, colon), icon: rest.slice(colon + 1) };
+}
+
 /**
- * "pin:bakery-m": Organic Maps' bakery icon on a disc. Made when the map
- * first needs it (the missing-image resolver), from the icon in the sprite.
+ * "pin:food:bakery-m": Organic Maps' bakery icon, recolored, on a disc in
+ * the group's color. Made when the map first needs it (the missing-image
+ * resolver), from the icon in the sprite.
  */
 function addPinImage(map: MapLibreMap, id: string, theme: Theme) {
-  const base = map.getImage(id.slice("pin:".length));
+  const parsed = parsePin(id);
+  const group = GROUPS.find((g) => g.id === parsed.group);
+  const base = map.getImage(parsed.icon);
   if (!base) return;
   const { width, height, data } = base.data;
   const ratio = base.pixelRatio;
@@ -85,7 +95,7 @@ function addPinImage(map: MapLibreMap, id: string, theme: Theme) {
   const colors = THEMES[theme];
   context.beginPath();
   context.arc(size / 2, size / 2, size / 2 - DISC_RING * ratio, 0, Math.PI * 2);
-  context.fillStyle = colors.disc;
+  context.fillStyle = group ? (theme === "dark" ? group.dark : group.color) : colors.disc;
   context.fill();
   context.lineWidth = DISC_RING * ratio;
   context.strokeStyle = colors.ring;
@@ -93,7 +103,30 @@ function addPinImage(map: MapLibreMap, id: string, theme: Theme) {
   const icon = document.createElement("canvas");
   icon.width = width;
   icon.height = height;
-  icon.getContext("2d")!.putImageData(new ImageData(Uint8ClampedArray.from(data), width, height), 0, 0);
+  const pixels = Uint8ClampedArray.from(data);
+  if (group) {
+    // Organic Maps icons are a glyph on their own colored circle (white on
+    // color in the light set, dark on color in the dark set). The circle is
+    // the most common opaque shade; the glyph is whatever differs from it.
+    // Keep the glyph, drop the circle and its soft edge, and paint the glyph
+    // one color on our group disc.
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(group.icon.slice(i, i + 2), 16));
+    const lum = (o: number) => 0.299 * pixels[o] + 0.587 * pixels[o + 1] + 0.114 * pixels[o + 2];
+    const shades: number[] = [];
+    for (let o = 0; o < pixels.length; o += 4) if (pixels[o + 3] > 250) shades.push(lum(o));
+    shades.sort((x, y) => x - y);
+    const base = shades.length ? shades[Math.floor(shades.length / 2)] : 0;
+    let spread = 1;
+    for (const shade of shades) spread = Math.max(spread, Math.abs(shade - base));
+    for (let o = 0; o < pixels.length; o += 4) {
+      const glyph = pixels[o + 3] > 250 ? (Math.abs(lum(o) - base) / spread - 0.15) / 0.6 : 0;
+      pixels[o] = r;
+      pixels[o + 1] = g;
+      pixels[o + 2] = b;
+      pixels[o + 3] = Math.round(Math.max(0, Math.min(1, glyph)) * 255);
+    }
+  }
+  icon.getContext("2d")!.putImageData(new ImageData(pixels, width, height), 0, 0);
   context.drawImage(icon, (size - width) / 2, (size - height) / 2);
   map.addImage(id, context.getImageData(0, 0, size, size), { pixelRatio: ratio });
 }
@@ -197,7 +230,7 @@ export default function OrganicMap(props: Props) {
     // Pins are made on first use. The sprite can still be loading then, so wait for the icon.
     map.setMissingStyleImageResolver(async (id) => {
       if (!id.startsWith("pin:")) return;
-      const base = id.slice("pin:".length);
+      const base = parsePin(id).icon;
       for (let tries = 0; tries < 100 && !map.hasImage(base); tries++) {
         await new Promise((resolve) => setTimeout(resolve, 50));
       }
@@ -232,8 +265,10 @@ export default function OrganicMap(props: Props) {
         type: "symbol",
         source: "places",
         layout: {
-          "icon-image": ["concat", "pin:", ["get", "icon"]],
-          "icon-padding": 1,
+          "icon-image": ["concat", "pin:", ["get", "group"], ":", ["get", "icon"]],
+          // Smaller pins zoomed out, so the map doesn't read as a carpet of discs
+          "icon-size": ["interpolate", ["linear"], ["zoom"], 9, 0.7, 13, 0.85, 15, 1],
+          "icon-padding": 2,
           "icon-allow-overlap": false,
           // Organic Maps' overlay order: priority, then rank (CalculateOverlayPriority); rank is 0-255
           "symbol-sort-key": ["-", 0, ["+", ["*", ["get", "priority"], 256], ["get", "rank"]]],
@@ -308,7 +343,8 @@ export default function OrganicMap(props: Props) {
         source: "user",
         layout: { "icon-image": "current-position", "icon-allow-overlap": true },
       });
-      setInstalled(themeRef.current);
+      // A map torn down and rebuilt (React dev remount) must not mark the new one ready
+      if (mapRef.current === map) setInstalled(themeRef.current);
     });
 
     map.on("click", (event) => {
@@ -349,6 +385,7 @@ export default function OrganicMap(props: Props) {
     return () => {
       map.remove();
       mapRef.current = null;
+      setInstalled(null);
     };
   }, []);
 
