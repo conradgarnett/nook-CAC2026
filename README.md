@@ -1,13 +1,13 @@
-# Local Map
+# Nook
 
 **Find the small, independent businesses around Washington, DC.**
 Congressional App Challenge 2026 entry from Maryland's 8th district.
 
-![Local Map: independent businesses around Bethesda and Kensington](docs/img/map-light.png)
+![Nook: independent businesses around Bethesda and Kensington](docs/img/map-light.png)
 
 Chains are easy to find. The family bakery, the barber who has been on the
 same corner for 20 years, the corner store with no website: those are the
-places that get lost. Local Map shows only independent businesses (two or
+places that get lost. Nook shows only independent businesses (two or
 fewer locations in the US) on a clean map of the DC area, so neighbors can
 find them and spend money close to home.
 

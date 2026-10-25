@@ -202,7 +202,7 @@ export default function LocalMap() {
     <div className={styles.app}>
       <aside className={styles.sidebar}>
         <div className={styles.appBar}>
-          <p className={styles.appName}>Local Map</p>
+          <p className={styles.appName}>Nook</p>
           <div className={styles.theme} role="radiogroup" aria-label="Map colors">
             {THEME_CHOICES.map((option) => (
               <button

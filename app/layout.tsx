@@ -9,7 +9,7 @@ const publicSans = Public_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Local Map",
+  title: "Nook",
   description:
     "Find independent small businesses around Washington, DC. Map data from OpenStreetMap and Organic Maps.",
 };

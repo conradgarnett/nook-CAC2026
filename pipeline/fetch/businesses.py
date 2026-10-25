@@ -40,7 +40,7 @@ OVERPASS_URLS = [
 ]
 ATTEMPTS_PER_SERVER = 2
 # Overpass rejects requests without a descriptive User-Agent
-HEADERS = {"User-Agent": "md08-local-map/0.1 (Congressional App Challenge student project)"}
+HEADERS = {"User-Agent": "nook/0.1 (Congressional App Challenge student project)"}
 PAUSE_SECONDS = 10  # be polite to the shared public server
 
 AMENITIES = "restaurant|cafe|fast_food|bar|pub|ice_cream|pharmacy"

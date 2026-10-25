@@ -1,8 +1,8 @@
 @AGENTS.md
 
-# MD-08 Local Map — notes for whoever works on this next
+# Nook (MD-08 small-business map) — notes for whoever works on this next
 
-Congressional App Challenge 2026 entry (our district: Maryland's 8th, Rep.
+**Nook**: Congressional App Challenge 2026 entry (our district: Maryland's 8th, Rep.
 Jamie Raskin). An interactive map of the DC area that finds small,
 independent businesses, drawn with Organic Maps' own map rules. Businesses
 load for whatever part of the map is on screen; the app no longer uses
@@ -811,3 +811,11 @@ why "add a missing business" is a core feature, not an extra.
   sidebar change together. The reported "only the sidebar changes" came
   from a dev server that had been running since 10-15; restarting it fixed
   it. Lint, `tsc` and `npm run build` pass.
+- **2026-10-25 (renamed to Nook):** The GitHub repo was renamed to
+  `conradgarnett/nook-CAC2026`, so the app is now **Nook** everywhere a
+  visitor or judge sees it: page title, sidebar app bar, README, package
+  name, Overpass User-Agent, `run.sh` banner. Browser storage keys stay
+  `local-map:*` so saved spots and the theme choice survive. Component file
+  names (`LocalMap.tsx`) left as is. Deleted the merged branches
+  `initial-setup`, `viewport-tiles` and `organic-rebuild` on GitHub (all
+  fully in `main`); `main` is the only branch.

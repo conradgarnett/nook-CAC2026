@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🌐 Starting the Congressional App Challenge 2026 site..."
+echo "🌐 Starting Nook (Congressional App Challenge 2026)..."
 
 # Check if node_modules exists, if not, remind to run install.sh
 if [ ! -d "node_modules" ]; then
