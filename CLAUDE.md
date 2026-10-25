@@ -819,3 +819,14 @@ why "add a missing business" is a core feature, not an extra.
   names (`LocalMap.tsx`) left as is. Deleted the merged branches
   `initial-setup`, `viewport-tiles` and `organic-rebuild` on GitHub (all
   fully in `main`); `main` is the only branch.
+- **2026-10-25 (bigger place names):** Conrad asked for larger town and city
+  names (Arlington, DC, Rockville). `build_style.py` now scales Organic
+  Maps' place caption sizes (`PLACE_SIZE_SCALE`: city 1.5x, town 1.45x,
+  state, village and suburb 1.3x, hamlet and quarter 1.2x, neighbourhood
+  1.15x) and draws city and town names in Noto Sans Bold. Zoomed out they
+  were also missing entirely: the business pins layer sat above them, so
+  pins were placed first and crowded the names out. `OrganicMap.tsx` now
+  moves the state, city, town, village and suburb caption layers above the
+  pins on every style load, so names win and pins make way. Checked in both
+  themes at about MapLibre zoom 10: Rockville, Bethesda, Silver Spring,
+  Arlington, Washington, McLean and Tysons all show.

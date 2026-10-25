@@ -42,6 +42,7 @@ OUT = ROOT / "public" / "map"
 TILES_URL = "https://tiles.openfreemap.org/planet"
 GLYPHS_URL = "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf"
 FONT = ["Noto Sans Regular"]
+FONT_BOLD = ["Noto Sans Bold"]
 # Organic Maps' backgrounds (data/styles/default/{light,dark}/colors.mapcss @background)
 BACKGROUND = {"light": "#E3E1D2", "dark": "#0F0F0F"}
 # Caption outline: the halo around map text
@@ -216,7 +217,13 @@ def text_paint(drules: Drules, captions: dict[int, dict]) -> dict:
 
 
 def caption_layer(
-    drules: Drules, om_type: str, source_layer: str, layer_filter: list, along_line: bool = False
+    drules: Drules,
+    om_type: str,
+    source_layer: str,
+    layer_filter: list,
+    along_line: bool = False,
+    size_scale: float = 1.0,
+    font: list[str] = FONT,
 ) -> tuple[int, dict] | None:
     """Names: point captions (places, water) or text along a line (streets, rivers)."""
     kind = "path_text" if along_line else "caption"
@@ -227,8 +234,8 @@ def caption_layer(
     priority = rules[min(captions)]["priority"]
     layout: dict = {
         "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
-        "text-font": FONT,
-        "text-size": width_expression({z: c["height"] for z, c in captions.items()}),
+        "text-font": font,
+        "text-size": width_expression({z: round(c["height"] * size_scale, 1) for z, c in captions.items()}),
         "text-max-width": 8,
         "text-optional": True,
     }
@@ -377,6 +384,9 @@ PLACES = {
     "quarter": "place-quarter",
     "neighbourhood": "place-neighbourhood",
 }
+# Town and city names drawn larger than Organic Maps' phone sizes, so a
+# laptop screen (and a demo video) reads "Rockville", "Arlington" at a glance
+PLACE_SIZE_SCALE = {"state": 1.3, "city": 1.5, "town": 1.45, "village": 1.3, "hamlet": 1.2, "suburb": 1.3, "quarter": 1.2, "neighbourhood": 1.15}
 # Base-map points of interest we keep: landmarks only. Shops, restaurants,
 # banks, gas stations... are left out so no chain shows; our own pins are
 # the only businesses on the map. (poi subclass → Organic Maps type)
@@ -483,7 +493,16 @@ def base_layers(drules: Drules) -> list[tuple[int, dict]]:
 
     # Place names and landmarks
     for omt_class, om_type in PLACES.items():
-        add_label(caption_layer(drules, om_type, "place", eq("class", omt_class)))
+        add_label(
+            caption_layer(
+                drules,
+                om_type,
+                "place",
+                eq("class", omt_class),
+                size_scale=PLACE_SIZE_SCALE[omt_class],
+                font=FONT_BOLD if omt_class in ("city", "town") else FONT,
+            )
+        )
     for subclass, om_type in LANDMARKS.items():
         add_label(icon_layer(drules, om_type, "poi", eq("subclass", subclass)))
 
