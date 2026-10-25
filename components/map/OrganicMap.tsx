@@ -343,12 +343,14 @@ export default function OrganicMap(props: Props) {
         source: "user",
         layout: { "icon-image": "current-position", "icon-allow-overlap": true },
       });
-      // Town and city names sit above the business pins, so they are placed
-      // first and pins make way for them (otherwise zoomed out, pins crowd
-      // every "Rockville" and "Arlington" off the map)
-      for (const kind of ["state", "city", "town", "village", "suburb"]) {
-        const id = `place-${kind}:caption`;
-        if (map.getLayer(id)) map.moveLayer(id);
+      // City names (Washington, Rockville, Bethesda, Arlington, Silver Spring)
+      // sit above the business pins so they always show; below the pins,
+      // pins crowded them off the map. They don't reserve space, so they
+      // never hide a business. Town and smaller names stay under the pins:
+      // they show where there's room and never overlap each other.
+      if (map.getLayer("place-city:caption")) {
+        map.moveLayer("place-city:caption");
+        map.setLayoutProperty("place-city:caption", "text-ignore-placement", true);
       }
       // A map torn down and rebuilt (React dev remount) must not mark the new one ready
       if (mapRef.current === map) setInstalled(themeRef.current);

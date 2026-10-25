@@ -830,3 +830,14 @@ why "add a missing business" is a core feature, not an extra.
   pins on every style load, so names win and pins make way. Checked in both
   themes at about MapLibre zoom 10: Rockville, Bethesda, Silver Spring,
   Arlington, Washington, McLean and Tysons all show.
+- **2026-10-25 (names no longer hide pins):** Conrad saw far fewer
+  businesses after the bigger names. Data and counts were unchanged; the
+  bold names were taking pins' space. Pins drawn, measured over Bethesda:
+  before the name change 62 / 183 / 274 at MapLibre zoom 12.5 / 11 / 10;
+  with names above pins 49 / 93 / 135. Now only the city layer (Washington,
+  Rockville, Bethesda, Arlington, Silver Spring, College Park...) is moved
+  above the pins, with `text-ignore-placement` so it reserves no space;
+  towns and smaller names stay under the pins (they show where there's
+  room and never overlap each other). Back to 62 / 183 / 274. Moving towns
+  up too, with or without reserving space, either cost pins again or made
+  town names overlap each other (Chevy Chase over Silver Spring).
